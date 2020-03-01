@@ -42,7 +42,7 @@ class GameGrid(Frame):
         self.mainloop()
 
     def update(self):
-        pickle_in = open("weights/221.8.pickle","rb"); agent = pickle.load(pickle_in)
+        pickle_in = open("w.pickle","rb"); agent = pickle.load(pickle_in)
         obs = self.env.reset()
         score = 0
         curr = time.time()
