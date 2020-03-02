@@ -28,6 +28,7 @@ class GameGrid(Frame):
     def __init__(self, env):
         Frame.__init__(self)
         self.env = env
+        self.env.reset()
         self.speed = SPEED
         self.row = env.row
         self.col = env.col

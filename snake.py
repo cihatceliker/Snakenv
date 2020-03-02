@@ -4,7 +4,6 @@ import sys
 EMPTY = -1
 FOOD = -2
 EGG = -3
-THROW_FOOD_EVERY = 20
 
 # 0 -> up
 # 1 -> right
