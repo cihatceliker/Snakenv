@@ -8,7 +8,6 @@ import pickle
 import torch
 import threading
 
-
 env = Environment(row=20, col=20, num_snakes=5, throw_food_every=20)
 
 brain_sizes = [49, 64, 64, 3]
