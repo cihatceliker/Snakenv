@@ -72,7 +72,6 @@ class GameGrid(Frame):
                 cell.grid(row=i, column=j, padx=GRID_PADDING, pady=GRID_PADDING)
                 grid_row.append(cell)
             self.grid_cells.append(grid_row)
-            
 
     def update_grid_cells(self):
         for i in range(self.row):
@@ -92,17 +91,15 @@ class GameGrid(Frame):
                             random.seed(snake.id)
                             self.grid_cells[i][j].configure(bg='#%02X%02X%02X' % (self.r(), self.r(), self.r()))
         self.update_idletasks()
-
-
+    """
     def key_down(self, event):
         self.snake = self.env.snakes[0]
-        
         self.commands = {
             KEY_LEFT: POSSIBLE_DIRECTIONS_TO_GO[self.snake.direction][2],
             KEY_RIGHT: POSSIBLE_DIRECTIONS_TO_GO[self.snake.direction][1]
         }
-
         key = repr(event.char)
         if key == "'q'":
             self.quit()
         if key in self.commands: self.snake.direction = self.commands[repr(event.char)]
+    """
