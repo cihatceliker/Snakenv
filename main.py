@@ -28,13 +28,11 @@ def train():
             for state, _, _, _ in obs:
                 action = agent.select_action(state)
                 action_list.append(action)
-
             obs_ = env.step(action_list)
             for i in range(min(len(obs), len(obs_))):
                 agent.store_experience(obs[i][0], action_list[i], obs_[i][1], obs_[i][0], 1-obs_[i][2])
                 score += obs_[i][1]
             obs = obs_
-            #LEARN
             agent.learn()
 
         agent.eps_start = max(agent.eps_end, agent.eps_decay * agent.eps_start)

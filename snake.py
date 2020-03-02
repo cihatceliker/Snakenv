@@ -5,6 +5,11 @@ EMPTY = -1
 FOOD = -2
 EGG = -3
 
+EAT_FOOD = 1.
+EAT_EGG = -0.5
+EAT_ANOTHER_SNAKE = -0.25
+DIE = -1.
+
 # 0 -> up
 # 1 -> right
 # 2 -> down
@@ -62,6 +67,9 @@ class Snake():
         self.giving_birth = False
         
     def step(self):
+        self.reward = 0.0
+        self.done = False
+        self.info = ""
         if len(self.body) == self.snake_growth_limit:
             self.giving_birth = True
             self.preg_count = 0
@@ -72,61 +80,69 @@ class Snake():
             self.preg_count += 1
             if self.preg_count == self.pregnancy_time:
                 egg = Egg(self, self.birth_location, self.env, self.egg_growth_limit)
-                self.tail = self.body[-1]
                 self.giving_birth = False
             else:
                 self.env.board[self.body.pop()] = EMPTY
-                self.tail = self.body[-1]
-            return self.observe(), False, 0, ""
-        return self.move()
-    
-    def move(self):
-        cur_dir = dirs[self.direction][0] + self.head[0], \
-                  dirs[self.direction][1] + self.head[1]
-        cur_dir = self.check_wall_hit(cur_dir)
+            self.tail = self.body[-1]
+        else:
+            self.move(self.observe())
+        return self.give_state(), self.reward, self.done, self.info
+
+    def observe(self):
+        cur_dir = self.check_wall_hit((dirs[self.direction][0] + self.head[0], \
+                                       dirs[self.direction][1] + self.head[1]))
         self.hunger += 1
-        reward = 0
         num = self.env.board[cur_dir]
-        if num == self.id or \
-            self.hunger > self.hunger_threshold:
-            return self.kill()
+        
+        if num == self.id:
+            self.kill("ate itself and died")
+        elif self.hunger > self.hunger_threshold:
+            self.kill("died from hunger")
         elif num == FOOD:
-            self.hunger = 0 # -= 50 # len(self.body) ##### 
-            self.food_queue.append(cur_dir)
-            reward += 1
-        elif num == EGG:
             self.hunger = 0
+            self.reward += EAT_FOOD
             self.food_queue.append(cur_dir)
+            self.info = "ate food"
+        elif num == EGG:
+            self.hunger = max(0, self.hunger - self.hunger_threshold / 2)
+            self.reward += EAT_EGG
+            self.food_queue.append(cur_dir)
+            self.info = "ate an egg"
         elif num != EMPTY:
             # it finds the snake its eating
             for snake in self.env.snakes:
                 if num == snake.id:
                     if cur_dir == snake.head:
                         if len(self.body) >= len(snake.body):
-                            snake.kill()
-                            reward += 1
+                            snake.kill("eaten by another snake")
+                            self.info = "ate another snake"
+                            self.reward += EAT_ANOTHER_SNAKE
                         else:
-                            return self.kill()
+                            self.kill("eaten by a bigger snake")
                     else:
                         snake.eat_body_from(cur_dir)
                     break
-        self.body.insert(0, cur_dir)
-        self.head = cur_dir
-        self.env.board[cur_dir] = self.id
+        return cur_dir
+        
+    def move(self, to):
+        self.body.insert(0, to)
+        self.head = to
+        self.env.board[to] = self.id
         if self.food_queue and self.tail == self.food_queue[0]:
             self.food_queue.pop(0)
         else:
             self.env.board[self.body.pop()] = EMPTY
             self.tail = self.body[-1]
-        return self.observe(), reward, False, ""
 
-    def kill(self):
+    def kill(self, info=""):
         for body_part in self.body:
             self.env.board[body_part] = FOOD
-        self.env.snakes.remove(self)
-        return self.observe(), -1, True, ""
+        self.env.to_be_killed.append(self)
+        self.reward += DIE
+        self.done = True
+        self.info = info
 
-    def observe(self):
+    def give_state(self):
         brain_food = []
         for look_to in DIRECTIONS_TO_LOOK[self.direction]:
             signals = self.check_dir(*look_to)
@@ -141,7 +157,7 @@ class Snake():
         params = [0] * 6
         is_found = [False] * 4
         head_found = False
-        check_it = [FOOD, EGG, self.id, 999999] # last is just a placeholder
+        check_it = [FOOD, EGG, self.id, 9999] # last is just a placeholder
         x_, y_ = self.head
         x_ += i; y_ += j
         distance = 1
@@ -169,11 +185,9 @@ class Snake():
         return params
 
     def eat_body_from(self, start):
-        ################
         if self.giving_birth:
-            self.kill()
+            self.kill("got eaten while giving birth")
             return
-        ################
         for i in range(len(self.body)):
             if self.body[i] == start:
                 for j in range(i + 1, len(self.body)):

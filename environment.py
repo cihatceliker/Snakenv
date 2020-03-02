@@ -16,16 +16,16 @@ class Environment:
         self.board = np.ones((self.row, self.col), dtype=np.int8) * EMPTY
         self.snakes = []
         self.eggs = []
+        self.to_be_killed = []
         self.snake_ids = 1
         self.tick = 0
         for i in range(self.num_snakes):
             snake = Snake((self.row // 2, self.col // (self.num_snakes + 1) * self.snake_ids), self.snake_ids, self)
             self.add_snake(snake)
         self.throw_food()
-        ####
         experience_list = []
         for snake in self.snakes:
-            experience_list.append((snake.observe(), False, 0, ""))
+            experience_list.append((snake.give_state(), 0., False, ""))
         return experience_list
 
     def step(self, action_list):
@@ -39,6 +39,9 @@ class Environment:
         experience_list = []
         for snake in self.snakes:
             experience_list.append(snake.step())
+        for snake in self.to_be_killed:
+            self.snakes.remove(snake)
+        self.to_be_killed = []
         return experience_list
 
     def throw_food(self):
