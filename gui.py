@@ -10,9 +10,6 @@ SIZE = 600
 GRID_PADDING = 5
 BACKGROUND_COLOR = "#457a01"
 
-SNAKE_HEAD_COLOR = "#173F5F"
-SNAKE_BODY_COLOR = "#20639B"
-
 COLORS = {
     EGG: "#fce2db",
     FOOD: "#c1094d",
@@ -21,7 +18,6 @@ COLORS = {
 
 KEY_LEFT = "'a'"
 KEY_RIGHT = "'d'"
-
 
 class GameGrid(Frame):
 
@@ -82,16 +78,14 @@ class GameGrid(Frame):
                     self.grid_cells[i][j].configure(bg=COLORS[curr])
                 else:
                     for snake in self.env.snakes:
-
                         if curr != snake.id: continue
-
                         if (i, j) == snake.head:
-                            self.grid_cells[i][j].configure(bg=SNAKE_HEAD_COLOR)
+                            self.grid_cells[i][j].configure(bg="#000")
                         else:
                             random.seed(snake.id)
                             self.grid_cells[i][j].configure(bg='#%02X%02X%02X' % (self.r(), self.r(), self.r()))
         self.update_idletasks()
-    """
+    
     def key_down(self, event):
         self.snake = self.env.snakes[0]
         self.commands = {
@@ -102,4 +96,3 @@ class GameGrid(Frame):
         if key == "'q'":
             self.quit()
         if key in self.commands: self.snake.direction = self.commands[repr(event.char)]
-    """
