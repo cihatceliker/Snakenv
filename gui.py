@@ -1,13 +1,12 @@
-from tkinter import Frame, Label, CENTER
+from snake import POSSIBLE_DIRECTIONS_TO_GO, EMPTY, FOOD, EGG
+from tkinter import Frame
 import time
 import threading
-from snake import POSSIBLE_DIRECTIONS_TO_GO, EMPTY, FOOD, EGG
 import pickle
+import numpy as np
 import random
 
-SPEED = 0.05
-SIZE = 720
-GRID_PADDING = 1
+
 BACKGROUND_COLOR = "#000"
 
 COLORS = {
@@ -16,33 +15,33 @@ COLORS = {
     EMPTY: "#313B74"
 }
 
-SNAKE_COLORS = [
-    "#DEA85D",
-    "#BE4E50",
-    "#C19489",
-    "#E5CB2F",
-    "#A2C1D3",
-    "#4B9A84",
-    "#895A69"
-]
-
-KEY_LEFT = "'a'"
-KEY_RIGHT = "'d'"
+def get_color(bg=COLORS[EMPTY]):
+    r, g, b = int(bg[1:3], 16), int(bg[3:5], 16), int(bg[5:7], 16)
+    noise = 80
+    r = min(255, max(0, 255-r+random.randint(-noise, noise)))
+    g = min(255, max(0, 255-g+random.randint(-noise, noise)))
+    b = min(255, max(0, 255-b+random.randint(-noise, noise)))
+    r = hex(r).split('x')[-1]
+    g = hex(g).split('x')[-1]
+    b = hex(b).split('x')[-1]
+    return "#"+r+g+b
 
 class GameGrid(Frame):
 
-    def __init__(self, env):
+    def __init__(self, env, grid_padding=1, frame_padding=0, speed=0.05, size=800):
         Frame.__init__(self)
         self.env = env
+        self.grid_padding = grid_padding
+        self.frame_padding = frame_padding
+        self.speed = speed
+        self.size = size
         self.env.reset()
-        self.speed = SPEED
         self.row = env.row
         self.col = env.col
         self.grid()
-        self.master.title('SnakeWithBrain')
+        self.master.title('Snakenv')
+        self.pause = False
         self.master.bind("<Key>", self.key_down)
-        #self.r = lambda: random.randint(0,255)
-        self.r = lambda: random.choice(SNAKE_COLORS)
         self.grid_cells = []
         self.init_grid()
         self.update_grid_cells()
@@ -50,61 +49,98 @@ class GameGrid(Frame):
         self.mainloop()
 
     def update(self):
-        pickle_in = open("w.pickle","rb"); agent = pickle.load(pickle_in)
+        pickle_in = open("w.snk","rb"); agent = pickle.load(pickle_in)
         obs = self.env.reset()
-        score = 0
         curr = time.time()
+        score = 0
         while self.env.snakes or self.env.eggs:
-            if curr + SPEED < time.time():
+            if curr + self.speed < time.time():
                 action_list = []
-                for state, _, _, _ in obs:
+                for state, reward, _, _ in obs:
                     action = agent.select_action(state)
                     action_list.append(action)
+                    score += reward
                 obs_ = self.env.step(action_list)
+                for _,_,_,info in obs_:
+                    if info != "": 
+                        print(info)
                 obs = obs_
                 self.update_grid_cells()
                 curr = time.time()
+        print("final score", score)
         self.quit()
 
     def start(self):
         threading.Thread(target=self.update).start()
 
+    def prepare_board(self):
+        # applying frame padding
+        if self.frame_padding == 0:
+            self.board = self.env.board
+            return
+        self.board = np.zeros((self.row+2*self.frame_padding, self.col+2*self.frame_padding))
+        self.board[self.frame_padding:-self.frame_padding,self.frame_padding:-self.frame_padding] = self.env.board
+        self.board[-self.frame_padding:,self.frame_padding:-self.frame_padding] = self.env.board[:self.frame_padding,:]
+        self.board[:self.frame_padding,self.frame_padding:-self.frame_padding] = self.env.board[-self.frame_padding:,:]
+        self.board[self.frame_padding:-self.frame_padding,-self.frame_padding:] = self.env.board[:,:self.frame_padding]
+        self.board[self.frame_padding:-self.frame_padding,:self.frame_padding] = self.env.board[:,-self.frame_padding:]
+        self.board[:self.frame_padding,:self.frame_padding] = self.env.board[-self.frame_padding:, -self.frame_padding:]
+        self.board[:self.frame_padding,-self.frame_padding:] = self.env.board[-self.frame_padding:, :self.frame_padding]
+        self.board[-self.frame_padding:,:self.frame_padding] = self.env.board[:self.frame_padding, -self.frame_padding:]
+        self.board[-self.frame_padding:,-self.frame_padding:] = self.env.board[:self.frame_padding, :self.frame_padding]
+
     def init_grid(self):
-        background = Frame(self, bg=BACKGROUND_COLOR, width=SIZE, height=SIZE)
+        assert self.row == self.col # for now
+        self.prepare_board()
+        background = Frame(self, bg=BACKGROUND_COLOR, width=self.size, height=self.size)
         background.grid()
-        for i in range(self.row):
+        for i in range(len(self.board)):
             grid_row = []
-            for j in range(self.col):
-                cell = Frame(background, bg=BACKGROUND_COLOR, width=SIZE/self.col, height=SIZE/self.row)
-                cell.grid(row=i, column=j, padx=GRID_PADDING, pady=GRID_PADDING)
+            for j in range(len(self.board)):
+                cell = Frame(background, bg=BACKGROUND_COLOR, \
+                    width=self.size/(self.col+self.frame_padding), height=self.size/(self.row+self.frame_padding))
+                cell.grid(row=i, column=j, padx=self.grid_padding, pady=self.grid_padding)
                 grid_row.append(cell)
             self.grid_cells.append(grid_row)
 
     def update_grid_cells(self):
-        for i in range(self.row):
-            for j in range(self.col):
-                curr = int(self.env.board[i, j])
-                
+        self.prepare_board()
+        for i in range(len(self.board)):
+            for j in range(len(self.board)):
+                x, y = i-self.frame_padding, j-self.frame_padding
+                curr = int(self.board[i, j])
                 if curr == EMPTY or curr == FOOD or curr == EGG:
                     self.grid_cells[i][j].configure(bg=COLORS[curr])
                 else:
                     for snake in self.env.snakes:
                         if curr != snake.id: continue
-                        if (i, j) == snake.head:
+                        if (x, y) == snake.head:
                             self.grid_cells[i][j].configure(bg="#000")
                         else:
+                            # comment seed to see the rainbow mode
                             random.seed(snake.id)
-                            #self.grid_cells[i][j].configure(bg='#%02X%02X%02X' % (self.r(), self.r(), self.r()))
-                            self.grid_cells[i][j].configure(bg=self.r())
+                            self.grid_cells[i][j].configure(bg=get_color())
         self.update_idletasks()
     
     def key_down(self, event):
         self.snake = self.env.snakes[0]
         self.commands = {
-            KEY_LEFT: POSSIBLE_DIRECTIONS_TO_GO[self.snake.direction][2],
-            KEY_RIGHT: POSSIBLE_DIRECTIONS_TO_GO[self.snake.direction][1]
+            "'a'": POSSIBLE_DIRECTIONS_TO_GO[self.snake.direction][2],
+            "'d'": POSSIBLE_DIRECTIONS_TO_GO[self.snake.direction][1]
         }
         key = repr(event.char)
+
         if key == "'q'":
             self.quit()
+        if key == "'s'":
+            self.speed += 0.005
+        if key == "'w'":
+            self.speed -= 0.005
+        if key == "' '":
+            if not self.pause:
+                self.prev = self.speed
+                self.speed = 100000
+            else:
+                self.speed = self.prev
+            self.pause = not self.pause
         #if key in self.commands: self.snake.direction = self.commands[repr(event.char)]

@@ -38,9 +38,12 @@ class Environment:
             self.snakes[i].direction = POSSIBLE_DIRECTIONS_TO_GO[self.snakes[i].direction][np.argmax(action_list[i])]
         experience_list = []
         for snake in self.snakes:
+            snake.pre_step()
+        for snake in self.snakes:
             experience_list.append(snake.step())
         for snake in self.to_be_killed:
-            self.snakes.remove(snake)
+            if snake in self.snakes:
+                self.snakes.remove(snake)
         self.to_be_killed = []
         return experience_list
 

@@ -18,7 +18,9 @@ class Brain(nn.Module):
             if i != len(args)-1: layers.append(nn.ReLU())
         self.layers = nn.Sequential(*layers)
         self.loss = nn.MSELoss()
-        self.device = torch.device("cuda")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # too taxing on cpu
+        if not torch.cuda.is_available(): print("enable cuda"); sys.exit(1)
         self.to(self.device)
 
     def forward(self, state):

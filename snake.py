@@ -49,14 +49,21 @@ DIRECTIONS_TO_LOOK = {
 
 class Snake():
 
-    def __init__(self, start, id_, env, radius=8, egg_growth_limit=10, snake_growth_limit=10, pregnancy_time=4, hunger_threshold=100):
+    def __init__(self, start, id_, env, radius=8, snake_growth_limit=10, pregnancy_time=4, hunger_threshold=100):
         self.env = env
         self.id = id_
+
         self.snake_growth_limit = snake_growth_limit
-        self.egg_growth_limit = egg_growth_limit
         self.pregnancy_time = pregnancy_time
         self.hunger_threshold = hunger_threshold
         self.radius = radius
+
+        # making snakes learn much more diversely
+        #self.snake_growth_limit = np.random.randint(20, 40)
+        #self.pregnancy_time = np.random.randint(4, 10)
+        #self.hunger_threshold = np.random.randint(40, 120)
+        #self.radius = np.random.randint(6, 12)
+
         self.head = start
         self.tail = start
         self.body = [self.head]
@@ -66,21 +73,25 @@ class Snake():
         self.hunger = 0
         self.giving_birth = False
         
-    def step(self):
+    def pre_step(self):
         self.reward = 0.0
         self.done = False
         self.info = ""
+
+    def step(self):
         if len(self.body) == self.snake_growth_limit:
             self.giving_birth = True
             self.preg_count = 0
             self.birth_index = len(self.body) - self.pregnancy_time
             self.birth_location = self.body[self.birth_index]
             self.clean_food_queue(self.birth_index)
+            self.info = "stopped to lay an egg"
         if self.giving_birth:
             self.preg_count += 1
             if self.preg_count == self.pregnancy_time:
-                egg = Egg(self, self.birth_location, self.env, self.egg_growth_limit)
+                egg = Egg(self.birth_location, self.env)
                 self.giving_birth = False
+                self.info = "gave birth"
             else:
                 self.env.board[self.body.pop()] = EMPTY
             self.tail = self.body[-1]
@@ -99,14 +110,12 @@ class Snake():
         elif self.hunger > self.hunger_threshold:
             self.kill("died from hunger")
         elif num == FOOD:
-            self.hunger = 0
             self.reward += EAT_FOOD
-            self.food_queue.append(cur_dir)
+            self.eat_it(cur_dir, self.hunger)
             self.info = "ate food"
         elif num == EGG:
-            self.hunger = max(0, self.hunger - self.hunger_threshold / 2)
             self.reward += EAT_EGG
-            self.food_queue.append(cur_dir)
+            self.eat_it(cur_dir, self.hunger_threshold / 2)
             self.info = "ate an egg"
         elif num != EMPTY:
             # it finds the snake its eating
@@ -114,16 +123,23 @@ class Snake():
                 if num == snake.id:
                     if cur_dir == snake.head:
                         if len(self.body) >= len(snake.body):
-                            snake.kill("eaten by another snake")
                             self.info = "ate another snake"
+                            self.eat_it(cur_dir, self.hunger_threshold / 4)
                             self.reward += EAT_ANOTHER_SNAKE
                         else:
                             self.kill("eaten by a bigger snake")
                     else:
                         snake.eat_body_from(cur_dir)
+                        self.eat_it(cur_dir, self.hunger_threshold / 4)
+                        self.reward += EAT_ANOTHER_SNAKE
+                        self.info = "ate some part of another snake's body"
                     break
         return cur_dir
-        
+    
+    def eat_it(self, to, hunger_decay):
+        self.food_queue.append(to)
+        self.hunger = max(0, self.hunger - hunger_decay)
+
     def move(self, to):
         self.body.insert(0, to)
         self.head = to
@@ -146,7 +162,8 @@ class Snake():
         brain_food = []
         for look_to in DIRECTIONS_TO_LOOK[self.direction]:
             signals = self.check_dir(*look_to)
-            brain_food = [*brain_food, *signals]
+            #brain_food = [*brain_food, *signals]
+            brain_food += signals
         # last addition to parameters is hunger
         hunger_signal =  self.hunger / self.hunger_threshold
         brain_food.append(hunger_signal)
@@ -215,10 +232,9 @@ class Snake():
 
 class Egg:
 
-    def __init__(self, parent, loc, env, growth_limit):
+    def __init__(self, loc, env, growth_limit=10):
         self.growth_limit = growth_limit
         self.growth = 0
-        self.parent = parent
         self.loc = loc
         self.env = env
         self.env.board[loc] = EGG
