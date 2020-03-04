@@ -8,11 +8,11 @@ import pickle
 import torch
 import threading
 
-env = Environment(row=24, col=24, num_snakes=5, throw_food_every=30)
+env = Environment(row=20, col=20, num_snakes=5, throw_food_every=40)
 brain_sizes = [49, 64, 64, 3]
 
 def train():
-    #agent = Agent(local_Q=Brain(*brain_sizes),target_Q=Brain(*brain_sizes),num_actions=brain_sizes[-1])
+    #agent = Agent(local_Q=Brain(*brain_sizes), target_Q=Brain(*brain_sizes), num_actions=brain_sizes[-1])
     #start = 1
     
     pickle_in = open("w.snk","rb"); agent = pickle.load(pickle_in)

@@ -1,45 +1,39 @@
 import torch
 import torch.optim as optim
 import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
 import random
 import math
 import sys
 
-
 device = torch.device("cuda")
+#torch.set_default_tensor_type('torch.cuda.FloatTensor')
+#torch.backends.cudnn.benchmark = True
+
 
 class Brain(nn.Module):
 
-    def __init__(self, *args):
+    def __init__(self, in_size, fc1_size, fc2_size, out_size):
         super(Brain, self).__init__()
-        layers = []
-        for i in range(1, len(args)):
-            layers.append(nn.Linear(args[i-1], args[i]))
-            if i != len(args)-1: layers.append(nn.ReLU())
-        self.layers = nn.Sequential(*layers)
+        self.fc1 = nn.Linear(in_size, fc1_size)
+        self.fc2 = nn.Linear(fc1_size, fc2_size)
+        self.out = nn.Linear(fc2_size, out_size)
         self.to(device)
 
-    def forward(self, state):
-        x = self.layers(state)
-        return x
-
-    def mutate(self, mutation_rate):
-        dc = self.state_dict()
-        for data in dc:
-            mask = torch.rand_like(dc[data]) < mutation_rate
-            sz = len(dc[data][mask])
-            dc[data][mask] = torch.randn(sz, device=device)
+    def forward(self, x):
+        x = torch.relu(self.fc1(x))
+        x = torch.relu(self.fc2(x))
+        return self.out(x)
 
 
 class Agent():
     
     def __init__(self, local_Q, target_Q, num_actions, eps_start=1.0, eps_end=0.01,
-                 eps_decay=0.995, gamma=0.99, alpha=5e-4, batch_size=64, memory_capacity=10000, tau=1e-3):
+                 eps_decay=0.995, gamma=0.99, alpha=5e-4, batch_size=128, memory_capacity=10000, tau=1e-3):
         self.local_Q = local_Q
         self.target_Q = target_Q
         self.target_Q.load_state_dict(self.local_Q.state_dict())
+        self.target_Q.eval()
         self.optimizer = optim.Adam(self.local_Q.parameters(), lr=alpha)
         self.loss = nn.MSELoss()
         self.num_actions = num_actions
@@ -53,6 +47,7 @@ class Agent():
         self.replay_memory = ReplayMemory(memory_capacity)
         self.scores = []
         self.episodes = []
+        self.batch_index = np.arange(self.batch_size)
 
     def store_experience(self, *args):
         self.replay_memory.push(args)
@@ -61,44 +56,40 @@ class Agent():
         state = torch.Tensor(state).to(device)
         sample = np.random.random()
         if sample > self.eps_start:
-            self.local_Q.eval()
             with torch.no_grad():
                 action = torch.argmax(self.local_Q(state)).item()
-            self.local_Q.train()
         else:
             action = np.random.randint(self.num_actions)
-        actions = [0.] * self.num_actions
-        actions[action] = 1
-        return actions
+        return action
 
     def learn(self):
         if len(self.replay_memory.memory) < self.batch_size:
             return
 
-        state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.replay_memory.sample(self.batch_size)
-
-        action_values = torch.arange(self.num_actions, dtype=torch.float, device=device)
-        action_indices = action_batch.matmul(action_values).long()
-        batch_index = torch.arange(self.batch_size).long()
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch = \
+            self.replay_memory.sample(self.batch_size)
 
         output = self.local_Q(state_batch)
         target = output.clone()
 
-        target[batch_index, action_indices] = reward_batch + \
-            self.gamma * torch.max(self.target_Q(next_state_batch), dim=1)[0] * done_batch
-    
-        loss = self.loss(output, target).to(device)
+        # vanilla dqn
+        target[self.batch_index, action_batch] = torch.max(self.target_Q(next_state_batch), dim=1)[0]
+        
+        # double dqn
+        #target[self.batch_index, action_batch] = \
+        # self.target_Q(next_state_batch)[self.batch_index, torch.argmax(self.local_Q(next_state_batch), dim=1)]
 
+        target[self.batch_index, action_batch] *= self.gamma * done_batch
+        target[self.batch_index, action_batch] += reward_batch
+
+        loss = self.loss(output, target.detach()).to(device)
         self.optimizer.zero_grad()
         loss.backward()
-        
-        #for param in self.local_Q.parameters(): param.grad.data.clamp_(-1, 1)
-
         self.optimizer.step()
 
         # soft update
         for target_param, local_param in zip(self.target_Q.parameters(), self.local_Q.parameters()):
-            target_param.data.copy_(self.tau * local_param.data + (1.0 - self.tau) * target_param.data)
+            target_param.data.copy_(self.tau * local_param.data + (1 - self.tau) * target_param.data)
 
 
 class ReplayMemory:

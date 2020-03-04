@@ -6,8 +6,8 @@ FOOD = -2
 EGG = -3
 
 EAT_FOOD = 1.
-EAT_EGG = -0.75
-EAT_ANOTHER_SNAKE = -1.
+EAT_EGG = -0.5
+EAT_ANOTHER_SNAKE = -0.25
 DIE = -1.
 
 # 0 -> up

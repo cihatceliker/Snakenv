@@ -35,7 +35,7 @@ class Environment:
         for egg in self.eggs:
             egg.step()
         for i in range(min(len(action_list),len(self.snakes))):
-            self.snakes[i].direction = POSSIBLE_DIRECTIONS_TO_GO[self.snakes[i].direction][np.argmax(action_list[i])]
+            self.snakes[i].direction = POSSIBLE_DIRECTIONS_TO_GO[self.snakes[i].direction][action_list[i]]
         experience_list = []
         for snake in self.snakes:
             snake.pre_step()
