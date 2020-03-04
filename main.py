@@ -8,8 +8,8 @@ import pickle
 import torch
 import threading
 
-env = Environment(row=20, col=20, num_snakes=4, throw_food_every=20)
-
+env = Environment(row=24, col=24, num_snakes=5, throw_food_every=16)
+# when dead,, head doesnt become food fix it
 brain_sizes = [49, 64, 64, 3]
 
 def train():
@@ -22,7 +22,7 @@ def train():
     start = agent.episodes[-1] + 1
 
     num_iter = 5000
-    best = 1000
+    best = 100000000
     for episode in range(start, num_iter):
         obs = env.reset()
         score = 0

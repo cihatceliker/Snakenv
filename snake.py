@@ -6,8 +6,8 @@ FOOD = -2
 EGG = -3
 
 EAT_FOOD = 1.
-EAT_EGG = -0.5
-EAT_ANOTHER_SNAKE = -0.25
+EAT_EGG = -0.75
+EAT_ANOTHER_SNAKE = -1.
 DIE = -1.
 
 # 0 -> up
@@ -59,9 +59,9 @@ class Snake():
         self.radius = radius
 
         # making snakes learn much more diversely
-        #self.snake_growth_limit = np.random.randint(20, 40)
+        #self.snake_growth_limit = np.random.randint(10, 40)
         #self.pregnancy_time = np.random.randint(4, 10)
-        #self.hunger_threshold = np.random.randint(40, 120)
+        #self.hunger_threshold = np.random.randint(50, 120)
         #self.radius = np.random.randint(6, 12)
 
         self.head = start
