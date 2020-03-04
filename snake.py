@@ -151,6 +151,7 @@ class Snake():
             self.tail = self.body[-1]
 
     def kill(self, info=""):
+        # when dead, head doesnt become food or get eaten instantly by itself. fixit
         for body_part in self.body:
             self.env.board[body_part] = FOOD
         self.env.to_be_killed.append(self)
