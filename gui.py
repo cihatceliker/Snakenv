@@ -26,6 +26,7 @@ def get_color(bg=COLORS[EMPTY]):
     b = hex(b).split('x')[-1]
     return "#"+r+g+b
 
+
 class GameGrid(Frame):
 
     def __init__(self, env, grid_padding=1, frame_padding=0, speed=0.05, size=800):

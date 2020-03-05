@@ -13,7 +13,7 @@ device = torch.device("cuda")
 
 class Brain(nn.Module):
 
-    def __init__(self, in_size, fc1_size, fc2_size, out_size):
+    def __init__(self, in_size, out_size, fc1_size=64, fc2_size=64):
         super(Brain, self).__init__()
         self.fc1 = nn.Linear(in_size, fc1_size)
         self.fc2 = nn.Linear(fc1_size, fc2_size)
@@ -26,6 +26,32 @@ class Brain(nn.Module):
         return self.out(x)
 
 
+class DuelingDQNBrain(nn.Module):
+
+    def __init__(self, in_size, out_size, fc1_size=64, fc2_size=32):
+        super(DuelingDQNBrain, self).__init__()
+        self.in_size = in_size
+        self.fc1 = nn.Linear(in_size, fc1_size)
+        self.fc_val = nn.Linear(fc1_size, fc2_size)
+        self.fc_adv = nn.Linear(fc1_size, fc2_size)
+        self.val = nn.Linear(fc2_size, 1)
+        self.adv = nn.Linear(fc2_size, out_size)
+        self.to(device)
+
+    def forward(self, state):
+        # !!!
+        if len(state) == self.in_size:
+            state = state.view(-1, self.in_size)
+        x = torch.relu(self.fc1(state))
+        val = torch.relu(self.fc_val(x))
+        adv = torch.relu(self.fc_adv(x))
+        val = self.val(val)
+        adv = self.adv(adv)
+        adv_mean = torch.mean(adv, dim=1, keepdim=True)
+        x = val + adv - adv_mean
+        return x
+
+
 class Agent():
     
     def __init__(self, local_Q, target_Q, num_actions, eps_start=1.0, eps_end=0.01,
@@ -35,7 +61,8 @@ class Agent():
         self.target_Q.load_state_dict(self.local_Q.state_dict())
         self.target_Q.eval()
         self.optimizer = optim.Adam(self.local_Q.parameters(), lr=alpha)
-        self.loss = nn.MSELoss()
+        #self.loss = nn.MSELoss()
+        self.loss = nn.SmoothL1Loss()
         self.num_actions = num_actions
         self.eps_start = eps_start
         self.eps_end = eps_end
@@ -108,8 +135,8 @@ class ReplayMemory:
     def sample(self, size):
         batch = random.sample(self.memory, size)
 
-        batch = tuple([*zip(*batch)])
-
+        batch = [*zip(*batch)]
+        
         state_batch = torch.tensor(batch[0], device=device)
         action_batch = torch.tensor(batch[1], device=device)
         reward_batch = torch.tensor(batch[2], device=device)

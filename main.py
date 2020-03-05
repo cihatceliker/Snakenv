@@ -1,5 +1,5 @@
 import dqn
-from dqn import Agent, Brain
+from dqn import Agent, Brain, DuelingDQNBrain
 from environment import Environment
 from snake import POSSIBLE_DIRECTIONS_TO_GO, DIRECTIONS_TO_LOOK
 import numpy as np
@@ -9,10 +9,12 @@ import torch
 import threading
 
 env = Environment(row=20, col=20, num_snakes=5, throw_food_every=40)
-brain_sizes = [49, 64, 64, 3]
+num_states = 49
+num_actions = 3
 
 def train():
-    #agent = Agent(local_Q=Brain(*brain_sizes), target_Q=Brain(*brain_sizes), num_actions=brain_sizes[-1])
+    #agent = Agent(local_Q=Brain(num_states, num_actions), target_Q=Brain(num_states, num_actions), num_actions=num_actions)
+    #agent = Agent(local_Q=DuelingDQNBrain(num_states, num_actions), target_Q=DuelingDQNBrain(num_states, num_actions), num_actions=num_actions)
     #start = 1
     
     pickle_in = open("w.snk","rb"); agent = pickle.load(pickle_in)
@@ -58,5 +60,4 @@ def train():
             print("weights are safe for ", episode)
         else: print('episode: ', episode,'score: %.6f' % score)
 
-env.render()
-#train()
+train()

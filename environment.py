@@ -61,3 +61,8 @@ class Environment:
 
     def render(self):
         GameGrid(self)
+    
+
+if __name__ == "__main__":
+    env = Environment(row=24, col=24, num_snakes=6, throw_food_every=20)
+    env.render()
