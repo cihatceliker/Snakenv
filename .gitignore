@@ -1,9 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 weights/
-new*/
-util.ipynb
-exp.py
 weight_conversion.py
 *.txt
 *.py[cod]

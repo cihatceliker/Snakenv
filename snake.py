@@ -4,10 +4,12 @@ import sys
 EMPTY = -1
 FOOD = -2
 EGG = -3
+REMAINS = -4
 
 EAT_FOOD = 1.
 EAT_EGG = -0.5
 EAT_ANOTHER_SNAKE = -0.25
+EAT_REMAINS = -0.1
 DIE = -1.
 
 # 0 -> up
@@ -113,6 +115,10 @@ class Snake():
             self.reward += EAT_FOOD
             self.eat_it(cur_dir, self.hunger)
             self.info = "ate food"
+        elif num == REMAINS:
+            self.reward += EAT_REMAINS
+            self.eat_it(cur_dir, self.hunger_threshold / 4)
+            self.info = "ate remains"
         elif num == EGG:
             self.reward += EAT_EGG
             self.eat_it(cur_dir, self.hunger_threshold / 2)
@@ -153,7 +159,7 @@ class Snake():
     def kill(self, info=""):
         # when dead, head doesnt become food or get eaten instantly by itself. fixit
         for body_part in self.body:
-            self.env.board[body_part] = FOOD
+            self.env.board[body_part] = REMAINS
         self.env.to_be_killed.append(self)
         self.reward += DIE
         self.done = True
@@ -170,11 +176,11 @@ class Snake():
         return brain_food
 
     def check_dir(self, i, j):
-        #params -> [food_dist, egg_dist, self_dist, other_dist, head_dist, size_comparison]
-        params = [0] * 6
-        is_found = [False] * 4
+        #params -> [food_dist, egg_dist, remains_dist, self_dist, other_dist, head_dist, size_comparison]
+        params = [0] * 7
+        is_found = [False] * 5
         head_found = False
-        check_it = [FOOD, EGG, self.id, 9999] # last is just a placeholder
+        check_it = [FOOD, EGG, REMAINS, self.id, 9999] # last is just a placeholder
         x_, y_ = self.head
         x_ += i; y_ += j
         distance = 1
@@ -192,9 +198,9 @@ class Snake():
                     # it will check for any head on its way
                     for snake in self.env.snakes:
                         if snake.head == (x_, y_):
-                            params[4] = 1 / distance
+                            params[5] = 1 / distance
                             head_found = True
-                            params[5] = -1 if len(self.body) < len(snake.body) else 1
+                            params[6] = -1 if len(self.body) < len(snake.body) else 1
                             break
             x_ += i
             y_ += j
@@ -208,7 +214,7 @@ class Snake():
         for i in range(len(self.body)):
             if self.body[i] == start:
                 for j in range(i + 1, len(self.body)):
-                    self.env.board[self.body[j]] = FOOD
+                    self.env.board[self.body[j]] = REMAINS
                 self.clean_food_queue(i)
                 self.body = self.body[:i]
                 self.tail = self.body[-1]

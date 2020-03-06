@@ -7,7 +7,7 @@ import math
 import sys
 
 if not torch.cuda.is_available():
-    print("running on cpu")
+    print("warning: running on cpu")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #torch.set_default_tensor_type('torch.cuda.FloatTensor')
 #torch.backends.cudnn.benchmark = True

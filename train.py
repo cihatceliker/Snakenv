@@ -4,18 +4,16 @@ import numpy as np
 import pickle
 
 env = Environment(row=20, col=20, num_snakes=5, throw_food_every=40)
-num_states = 49
+num_states = 57
 num_actions = 3
 
 # to do: play against AI
 
 #agent = Agent(local_Q=Brain(num_states, num_actions), target_Q=Brain(num_states, num_actions), num_actions=num_actions)
-#agent = Agent(local_Q=DuelingDQNBrain(num_states, num_actions), target_Q=DuelingDQNBrain(num_states, num_actions), num_actions=num_actions)
-#start = 1
+pickle_in = open("new_brain.snk","rb"); agent = pickle.load(pickle_in)
 
-pickle_in = open("w.snk","rb"); agent = pickle.load(pickle_in)
-start = agent.episodes[-1] + 1
 
+start = 1 if len(agent.episodes) == 0 else agent.episodes[-1] + 1
 num_iter = 5000
 for episode in range(start, num_iter):
     # observations are (s, a, r, s', done) tuples per snake
@@ -40,7 +38,7 @@ for episode in range(start, num_iter):
     if episode % 10 == 0:
         avg_score = np.mean(agent.scores[max(0, episode-10):(episode+1)])
         print('episode: ', episode,'score: %.6f' % score, ' average score %.3f' % avg_score)
-        pickle_out = open("new_weights/"+str(episode)+".snk","wb")
+        pickle_out = open(""+str(episode)+".snk","wb")
         pickle.dump(agent, pickle_out)
         pickle_out.close()
         print("weights are safe for ", episode)

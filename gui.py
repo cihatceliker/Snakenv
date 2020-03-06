@@ -1,4 +1,4 @@
-from snake import POSSIBLE_DIRECTIONS_TO_GO, EMPTY, FOOD, EGG
+from snake import POSSIBLE_DIRECTIONS_TO_GO, EMPTY, FOOD, EGG, REMAINS
 from tkinter import Frame
 import time
 import threading
@@ -12,6 +12,7 @@ BACKGROUND_COLOR = "#000"
 COLORS = {
     EGG: "#C1895B",
     FOOD: "#EB252A",
+    REMAINS: "#A18201",
     EMPTY: "#313B74"
 }
 
@@ -110,7 +111,7 @@ class GameGrid(Frame):
             for j in range(len(self.board)):
                 x, y = i-self.frame_padding, j-self.frame_padding
                 curr = int(self.board[i, j])
-                if curr == EMPTY or curr == FOOD or curr == EGG:
+                if curr in COLORS:
                     self.grid_cells[i][j].configure(bg=COLORS[curr])
                 else:
                     for snake in self.env.snakes:
