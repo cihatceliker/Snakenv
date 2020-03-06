@@ -6,7 +6,9 @@ import random
 import math
 import sys
 
-device = torch.device("cuda")
+if not torch.cuda.is_available():
+    print("running on cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #torch.set_default_tensor_type('torch.cuda.FloatTensor')
 #torch.backends.cudnn.benchmark = True
 
@@ -18,7 +20,6 @@ class Brain(nn.Module):
         self.fc1 = nn.Linear(in_size, fc1_size)
         self.fc2 = nn.Linear(fc1_size, fc2_size)
         self.out = nn.Linear(fc2_size, out_size)
-        self.to(device)
 
     def forward(self, x):
         x = torch.relu(self.fc1(x))
@@ -36,7 +37,6 @@ class DuelingDQNBrain(nn.Module):
         self.fc_adv = nn.Linear(fc1_size, fc2_size)
         self.val = nn.Linear(fc2_size, 1)
         self.adv = nn.Linear(fc2_size, out_size)
-        self.to(device)
 
     def forward(self, state):
         # !!!
@@ -56,8 +56,8 @@ class Agent():
     
     def __init__(self, local_Q, target_Q, num_actions, eps_start=1.0, eps_end=0.01,
                  eps_decay=0.995, gamma=0.99, alpha=5e-4, batch_size=128, memory_capacity=10000, tau=1e-3):
-        self.local_Q = local_Q
-        self.target_Q = target_Q
+        self.local_Q = local_Q.to(device)
+        self.target_Q = target_Q.to(device)
         self.target_Q.load_state_dict(self.local_Q.state_dict())
         self.target_Q.eval()
         self.optimizer = optim.Adam(self.local_Q.parameters(), lr=alpha)
@@ -135,7 +135,7 @@ class ReplayMemory:
     def sample(self, size):
         batch = random.sample(self.memory, size)
 
-        batch = [*zip(*batch)]
+        batch = list(zip(*batch))
         
         state_batch = torch.tensor(batch[0], device=device)
         action_batch = torch.tensor(batch[1], device=device)

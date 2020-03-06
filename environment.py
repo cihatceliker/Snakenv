@@ -1,6 +1,6 @@
 import numpy as np
-from snake import Snake, EMPTY, FOOD, POSSIBLE_DIRECTIONS_TO_GO
 import sys
+from snake import Snake, EMPTY, FOOD, POSSIBLE_DIRECTIONS_TO_GO
 from gui import GameGrid
 
 
@@ -61,7 +61,6 @@ class Environment:
 
     def render(self):
         GameGrid(self)
-    
 
 if __name__ == "__main__":
     env = Environment(row=24, col=24, num_snakes=6, throw_food_every=20)

@@ -163,7 +163,6 @@ class Snake():
         brain_food = []
         for look_to in DIRECTIONS_TO_LOOK[self.direction]:
             signals = self.check_dir(*look_to)
-            #brain_food = [*brain_food, *signals]
             brain_food += signals
         # last addition to parameters is hunger
         hunger_signal =  self.hunger / self.hunger_threshold

@@ -137,7 +137,7 @@ class GameGrid(Frame):
             self.speed += 0.005
         if key == "'w'":
             self.speed -= 0.005
-        if key == "' '":
+        if key == "'p'":
             if not self.pause:
                 self.prev = self.speed
                 self.speed = 100000
