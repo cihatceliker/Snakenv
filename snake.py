@@ -59,21 +59,22 @@ DIRECTIONS_TO_LOOK = {
 
 class Snake():
 
-    def __init__(self, start, id_, env, radius=8, snake_growth_limit=16, pregnancy_time=4, hunger_threshold=120):
+    def __init__(self, start, id_, env, diverse=False, radius=8, snake_growth_limit=15, pregnancy_time=4, hunger_threshold=80):
         self.env = env
         self.id = id_
-
-        self.snake_growth_limit = snake_growth_limit
-        self.pregnancy_time = pregnancy_time
-        self.hunger_threshold = hunger_threshold
-        self.radius = radius
-
-        # making snakes learn much more diversely
-        #self.snake_growth_limit = np.random.randint(10, 40)
-        #self.pregnancy_time = np.random.randint(4, 10)
-        #self.hunger_threshold = np.random.randint(50, 120)
-        #self.radius = np.random.randint(6, 12)
-
+        
+        if diverse:
+            # making snakes learn much more diversely
+            self.snake_growth_limit = np.random.randint(20, 60)
+            self.pregnancy_time = np.random.randint(4, 12)
+            self.hunger_threshold = np.random.randint(50, 100)
+            self.radius = np.random.randint(6, 12)
+        else:
+            self.snake_growth_limit = snake_growth_limit
+            self.pregnancy_time = pregnancy_time
+            self.hunger_threshold = hunger_threshold
+            self.radius = radius
+        
         self.head = start
         self.tail = start
         self.body = [self.head]

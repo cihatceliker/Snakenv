@@ -3,12 +3,12 @@ from environment import Environment
 import numpy as np
 import pickle
 
-env = Environment(row=20, col=20, num_snakes=5, throw_food_every=40)
-num_states = 57
-num_actions = 3
+env = Environment(row=30, col=30, num_snakes=6, throw_food_every=20)
+num_states = env.observation_space
+num_actions = env.action_space
 
 #agent = Agent(local_Q=Brain(num_states, num_actions), target_Q=Brain(num_states, num_actions), num_actions=num_actions)
-pickle_in = open("w.snk","rb"); agent = pickle.load(pickle_in)
+pickle_in = open("brain.snk","rb"); agent = pickle.load(pickle_in)
 
 
 start = 1 if len(agent.episodes) == 0 else agent.episodes[-1] + 1
@@ -33,7 +33,7 @@ for episode in range(start, num_iter):
 
     agent.episodes.append(episode)
     agent.scores.append(score)
-    if episode % 4 == 0:
+    if episode % 10 == 0:
         avg_score = np.mean(agent.scores[max(0, episode-10):(episode+1)])
         print('episode: ', episode,'score: %.6f' % score, ' average score %.3f' % avg_score)
         pickle_out = open(""+str(episode)+".snk","wb")

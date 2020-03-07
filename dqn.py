@@ -26,17 +26,6 @@ class Brain(nn.Module):
         x = torch.relu(self.fc2(x))
         return self.out(x)
 
-    def forward_visual_mode(self, x):
-        x = torch.Tensor(x).to(device).detach()
-        ins = [x.clamp(0,1)]
-        x = self.fc1(x)
-        ins.append((x-x.min())/(x.max()-x.min()))
-        x = self.fc2(x)
-        ins.append((x-x.min())/(x.max()-x.min()))
-        x = self.out(x)
-        ins.append((x-x.min())/(x.max()-x.min()))
-        return ins
-
 
 class DuelingDQNBrain(nn.Module):
 

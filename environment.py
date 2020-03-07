@@ -9,6 +9,8 @@ class Environment:
         self.row = row
         self.col = col
         self.num_snakes = num_snakes
+        self.observation_space = 57
+        self.action_space = 3
         self.throw_food_every = throw_food_every
     
     def reset(self):
