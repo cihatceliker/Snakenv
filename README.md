@@ -33,15 +33,16 @@ how it works briefly:
 #### Observation and Action Space
 
 Snakes have sensors in 8 directions relative to their head position and moving direction. They also have a radius which restricts their vision. 
-There are 6 parameters per direction. They look for:
+There are 7 parameters per direction. They look for:
 - Food
 - Egg
+- Body remains
 - Body part of itself
 - Other snakes' body
 - Other snakes' head
 - If there is a head found, is it bigger than itself
 
-If they found any of these, they set that parameter to the distance where they found it. This makes 48 inputs in total. Lastly, they have *hunger* as the last input.
+If they found any of these, they set that parameter to the distance where they found it. This makes 56 inputs in total. Lastly, they have *hunger* as the last input.
 All of these go into the brain as an observation after that, the brain gives an output. Possible actions are:
 - Turn left
 - Go straight
@@ -57,13 +58,18 @@ After that, they stopped eating eggs, but they are still getting into unnecessar
 
 ### Controls
 
- - W -> Game-speed ++
- - S -> Game-speed --
+ - X -> Game-speed ++
+ - Z -> Game-speed --
  - Q -> quit
  - P -> pause/continue
 
+    To visualize a snakes' brain, pause the game and choose a snake.
+    To control a snake:
+     - Press "c" after you choose a snake
+     - Continue the game and control the snake with W, A, S, D
+
  You need **[PyTorch](https://pytorch.org/get-started/locally/)** to run the game.
- Just run the *environment.py* file to watch them play.
+ Just run the *gui.py* file to watch them play.
  
 
 #### Scores graph:
@@ -73,16 +79,8 @@ After that, they stopped eating eggs, but they are still getting into unnecessar
 
 ## Some screens
 
-#### Egg:
-![alt text](/img/egg.png)
-#### Food:
-![alt text](/img/food.png)
-
-#### Black is a snake's head.
-
-![alt text](/img/ss1.png)
+![alt text](/img/ss1.gif)
 # 
-![alt text](/img/ss2.png)
+![alt text](/img/ss2.gif)
 # 
-![alt text](/img/ss3.png)
 

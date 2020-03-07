@@ -1,7 +1,9 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 weights/
+ss/
 weight_conversion.py
+*0.snk
 *.txt
 *.py[cod]
 *$py.class

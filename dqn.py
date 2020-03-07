@@ -29,12 +29,12 @@ class Brain(nn.Module):
     def forward_visual_mode(self, x):
         x = torch.Tensor(x).to(device).detach()
         ins = [x.clamp(0,1)]
-        x = torch.sigmoid(self.fc1(x))
-        ins.append(x)
-        x = torch.sigmoid(self.fc2(x))
-        ins.append(x)
-        x = torch.sigmoid(self.out(x))
-        ins.append(x)
+        x = self.fc1(x)
+        ins.append((x-x.min())/(x.max()-x.min()))
+        x = self.fc2(x)
+        ins.append((x-x.min())/(x.max()-x.min()))
+        x = self.out(x)
+        ins.append((x-x.min())/(x.max()-x.min()))
         return ins
 
 

@@ -7,6 +7,8 @@ from environment import Environment
 import numpy as np
 import random
 import sys
+from pyscreenshot import grab
+from PIL import Image
 
 BACKGROUND_COLOR = "#000"
 NEURON_COLOR = "red"
@@ -45,7 +47,7 @@ class GameGrid():
         self.visual = Canvas(self.right_frame, width=size, height=size, bg=BACKGROUND_COLOR)
         self.visual.pack()
 
-        pickle_in = open("w.snk","rb")
+        pickle_in = open("1420.snk","rb")
         self.agent = pickle.load(pickle_in)
         self.env = env
         self.env.reset()
@@ -55,6 +57,8 @@ class GameGrid():
         self.pause = False
         self.chosen_one = None
         self.controller = False
+        self.take_ss = False
+        self.image_counter = 0
 
         self.init_board()
         self.update_board()
@@ -127,7 +131,6 @@ class GameGrid():
                             # comment seed to see the rainbow mode
                             random.seed(snake.id)
                             color = get_color()
-                
                 rect = draw_rectangle(self.game, j*self.rectangle_size, i*self.rectangle_size, self.rectangle_size, color)
                 row.append(rect)
             self.game_area.append(row)
@@ -168,6 +171,8 @@ class GameGrid():
         for k, v in coords.items():
             for i in v:
                 c.append((k, i))
+        self.neurons = []
+        self.lines = []
         coord_layers = []
         k = 0
         for i in layers:
@@ -175,15 +180,19 @@ class GameGrid():
             for _ in range(i):
                 coord_layers[-1].append(c[k])
                 k+=1
-        self.neurons = []
-        self.lines = []
+        num_neurons = 0
         for i in range(len(coord_layers)-1):
+            num_neurons += len(coord_layers[i])
             for j in range(len(coord_layers[i])):
+                n = 0
                 for k in range(len(coord_layers[i+1])):
-                    if random.random() < 0.05:
+                    if (i == len(coord_layers)-2 and random.random() < 0.2) or random.random() < 0.05:
                         x1, y1 = coord_layers[i][j]
                         x2, y2 = coord_layers[i+1][k]
-                        self.lines.append(self.visual.create_line(x1+radius/2,y1+radius/2,x2+radius/2,y2+radius/2))
+                        self.lines.append((self.visual.create_line(x1+radius/2,y1+radius/2,x2+radius/2,y2+radius/2), num_neurons+n))
+                    else:
+                        self.lines.append(None)
+                    n+=1
         for x, y in c:
             self.neurons.append(self.visual.create_oval(x,y,x+radius,y+radius,width=0,fill="#f00"))
 
@@ -194,13 +203,29 @@ class GameGrid():
         k = 0
         for i in inputs:
             for num in range(len(i)):
-                value = i[num].item()#-mn)/(mx-mn)
-                r = int(255*(1-value))
-                g = int(255*value)
+                p = i[num].item()
+                r = int((1.0-p) * 255 + 0.5)
+                g = int(p * 255 + 0.5)
                 color = "#" + "".join([format(val, '02X') for val in (r,g,0)])
                 neuron = self.neurons[k]
                 self.visual.itemconfig(neuron, fill=color)
+                """
+                for line in range(len(self.lines)):
+                    if self.lines[line] is None: continue
+                    if self.lines[line][1] == k:
+                        self.visual.itemconfig(self.lines[line][0], fill=color)
+                """
                 k += 1
+        p = inputs[0][-1]
+        g = int((1.0-p) * 255 + 0.5)
+        r = int(p * 255 + 0.5)
+        self.visual.configure(background="#"+"".join([format(val, '02X') for val in (r,g,0)]))
+        if self.take_ss:
+            x = 1
+            y = 359
+            img = grab(bbox=(x,y,x+1438,y+718))
+            img.save("ss/ss"+str(self.image_counter)+".png")
+            self.image_counter += 1
         
     def on_click(self, event):
         x = int(event.x // self.rectangle_size)
@@ -229,7 +254,9 @@ class GameGrid():
             self.speed -= 0.005
         if key == "'p'":
             self.pause = not self.pause
+        if key == "'m'":
+            self.take_ss = not self.take_ss
 
 
-env = Environment(row=25, col=25, num_snakes=6, throw_food_every=30)
+env = Environment(row=30, col=30, num_snakes=6, throw_food_every=20)
 gui = GameGrid(env)
