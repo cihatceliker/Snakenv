@@ -49,13 +49,6 @@ All of these go into the brain as an observation after that, the brain gives an 
 - Turn right
 
 
-### Rewards
-
-At the start, eating food was +1, killing another snake was +0.5 and dying was -1 reward. As they learn, they started eating their eggs, right after they laid it. To prevent that, eating an egg is set to -0.5 reward.
-After that, they stopped eating eggs, but they are still getting into unnecessary competition with other snakes. One clever snake kills all of the other snakes and then focuses on the food that environments throw. So as the last adjustment, killing another snake is set to a negative reward. Now what they found is probably the optimal policy in this reward settings:
- - They eat each other's body until the only thing left is their head. So nobody dies unnecessarily and everyone gets fed.
-
-
 ### Controls
 
  - X -> Game-speed ++

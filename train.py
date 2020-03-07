@@ -3,7 +3,7 @@ from environment import Environment
 import numpy as np
 import pickle
 
-env = Environment(row=20, col=20, num_snakes=5, throw_food_every=30)
+env = Environment(row=20, col=20, num_snakes=5, throw_food_every=40)
 num_states = 57
 num_actions = 3
 
@@ -33,7 +33,7 @@ for episode in range(start, num_iter):
 
     agent.episodes.append(episode)
     agent.scores.append(score)
-    if episode % 10 == 0:
+    if episode % 4 == 0:
         avg_score = np.mean(agent.scores[max(0, episode-10):(episode+1)])
         print('episode: ', episode,'score: %.6f' % score, ' average score %.3f' % avg_score)
         pickle_out = open(""+str(episode)+".snk","wb")

@@ -7,8 +7,7 @@ from environment import Environment
 import numpy as np
 import random
 import sys
-from pyscreenshot import grab
-from PIL import Image
+#from pyscreenshot import grab
 
 BACKGROUND_COLOR = "#000"
 NEURON_COLOR = "red"
@@ -34,7 +33,7 @@ def get_color(bg=COLORS[EMPTY]):
 
 class GameGrid():
 
-    def __init__(self, env, speed=0.05, size=720):
+    def __init__(self, speed=0.05, size=720):
         self.root = Tk()
         self.root.configure(background=BACKGROUND_COLOR)
         self.left_frame = Frame(self.root, width=size, height=size, bg=BACKGROUND_COLOR)
@@ -47,9 +46,9 @@ class GameGrid():
         self.visual = Canvas(self.right_frame, width=size, height=size, bg=BACKGROUND_COLOR)
         self.visual.pack()
 
-        pickle_in = open("1420.snk","rb")
+        pickle_in = open("w.snk","rb")
         self.agent = pickle.load(pickle_in)
-        self.env = env
+        self.env = Environment(row=30, col=30, num_snakes=6, throw_food_every=20)
         self.env.reset()
         self.speed = speed
         self.size = size
@@ -220,12 +219,14 @@ class GameGrid():
         g = int((1.0-p) * 255 + 0.5)
         r = int(p * 255 + 0.5)
         self.visual.configure(background="#"+"".join([format(val, '02X') for val in (r,g,0)]))
+        """
         if self.take_ss:
             x = 1
             y = 359
             img = grab(bbox=(x,y,x+1438,y+718))
             img.save("ss/ss"+str(self.image_counter)+".png")
             self.image_counter += 1
+        """
         
     def on_click(self, event):
         x = int(event.x // self.rectangle_size)
@@ -258,5 +259,5 @@ class GameGrid():
             self.take_ss = not self.take_ss
 
 
-env = Environment(row=30, col=30, num_snakes=6, throw_food_every=20)
-gui = GameGrid(env)
+if __name__ == "__main__":
+    GameGrid()
