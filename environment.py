@@ -1,7 +1,6 @@
 import numpy as np
 import sys
 from snake import Snake, EMPTY, FOOD, POSSIBLE_DIRECTIONS_TO_GO
-from gui import GameGrid
 
 
 class Environment:
@@ -28,14 +27,15 @@ class Environment:
             experience_list.append((snake.give_state(), 0., False, ""))
         return experience_list
 
-    def step(self, action_list):
+    def step(self, action_list, controlled=-1):
         self.tick += 1
         if self.tick % self.throw_food_every == 0:
             self.throw_food()
         for egg in self.eggs:
             egg.step()
         for i in range(min(len(action_list),len(self.snakes))):
-            self.snakes[i].direction = POSSIBLE_DIRECTIONS_TO_GO[self.snakes[i].direction][action_list[i]]
+            if self.snakes[i].id != controlled:
+                self.snakes[i].direction = POSSIBLE_DIRECTIONS_TO_GO[self.snakes[i].direction][action_list[i]]
         experience_list = []
         for snake in self.snakes:
             snake.pre_step()
@@ -58,10 +58,3 @@ class Environment:
     def add_snake(self, snake):
         self.snakes.append(snake)
         self.snake_ids += 1
-
-    def render(self):
-        GameGrid(self)
-
-if __name__ == "__main__":
-    env = Environment(row=24, col=24, num_snakes=6, throw_food_every=20)
-    env.render()

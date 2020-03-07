@@ -9,7 +9,7 @@ REMAINS = -4
 EAT_FOOD = 1.
 EAT_EGG = -0.5
 EAT_ANOTHER_SNAKE = -0.25
-EAT_REMAINS = -0.1
+EAT_REMAINS = -0.25
 DIE = -1.
 
 # 0 -> up
@@ -18,6 +18,14 @@ DIE = -1.
 # 3 -> left
 dirs = [(-1, 0), (0, 1), (1, 0), (0, -1)]
 
+
+"[w,a,s,d]"
+CONTROLLER_MAPPING = {
+    0: [0,1,0,3],
+    1: [0,1,2,1],
+    2: [2,1,2,3],
+    3: [0,3,2,3]
+}
 # relative to itself
 # [go straight, turn right, turn left]
 POSSIBLE_DIRECTIONS_TO_GO = {
@@ -55,16 +63,16 @@ class Snake():
         self.env = env
         self.id = id_
 
-        self.snake_growth_limit = snake_growth_limit
-        self.pregnancy_time = pregnancy_time
-        self.hunger_threshold = hunger_threshold
-        self.radius = radius
+        #self.snake_growth_limit = snake_growth_limit
+        #self.pregnancy_time = pregnancy_time
+        #self.hunger_threshold = hunger_threshold
+        #self.radius = radius
 
         # making snakes learn much more diversely
-        #self.snake_growth_limit = np.random.randint(10, 40)
-        #self.pregnancy_time = np.random.randint(4, 10)
-        #self.hunger_threshold = np.random.randint(50, 120)
-        #self.radius = np.random.randint(6, 12)
+        self.snake_growth_limit = np.random.randint(10, 40)
+        self.pregnancy_time = np.random.randint(4, 10)
+        self.hunger_threshold = np.random.randint(50, 120)
+        self.radius = np.random.randint(6, 12)
 
         self.head = start
         self.tail = start
