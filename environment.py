@@ -14,7 +14,7 @@ class Environment:
         self.throw_food_every = throw_food_every
     
     def reset(self):
-        self.board = np.ones((self.row, self.col), dtype=np.int8) * EMPTY
+        self.board = np.ones((self.row, self.col), dtype=np.int32) * EMPTY
         self.snakes = []
         self.eggs = []
         self.to_be_killed = []

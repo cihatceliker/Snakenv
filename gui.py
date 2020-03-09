@@ -38,15 +38,16 @@ class GameGrid():
         self.root.configure(background=BACKGROUND_COLOR)
         self.left_frame = Frame(self.root, width=size, height=size, bg=BACKGROUND_COLOR)
         self.left_frame.grid(row=0, column=0)
-        self.right_frame = Frame(self.root, width=size, height=size, bg=BACKGROUND_COLOR)
+        self.right_frame = Frame(self.root, width=size/2, height=size, bg=BACKGROUND_COLOR)
         self.right_frame.grid(row=0, column=1)
         self.game = Canvas(self.left_frame, width=size, height=size, bg=BACKGROUND_COLOR)
         self.game.pack()
-        self.visual = Canvas(self.right_frame, width=size, height=size, bg=BACKGROUND_COLOR)
+        self.visual = Canvas(self.right_frame, width=size/2, height=size, bg=BACKGROUND_COLOR)
         self.visual.pack()
 
         self.agent = pickle.load(open("numpy_brain.snk","rb"))
         self.env = Environment(row=20, col=20, num_snakes=4, throw_food_every=20)
+        #self.env = Environment(row=60, col=60, num_snakes=20, throw_food_every=8)
         self.env.reset()
         self.speed = speed
         self.size = size
@@ -72,6 +73,7 @@ class GameGrid():
 
     def run_game(self):
         obs = self.env.reset()
+        score = 0
         while not self.quit:
             if not self.pause:
                 action_list = []
@@ -79,10 +81,12 @@ class GameGrid():
                     action = self.agent.select_action(state)
                     action_list.append(action)
                 obs_ = self.env.step(action_list, controlled=None if not self.chosen_one or not self.controller else self.chosen_one.id)
-                for _,_,_,info in obs_:
-                    if info != "":
-                        print(info)
                 obs = obs_
+                if self.chosen_one:
+                    for _,_,_,info in obs:
+                        id_, info = info
+                        if info != "" and id_ == self.chosen_one.id:
+                            print(info)
                 # if chosen snake dies
                 if self.chosen_one not in self.env.snakes:
                     self.chosen_one = None
@@ -92,7 +96,7 @@ class GameGrid():
                 self.update_brain()
                 time.sleep(max(self.speed, 0))
             self.root.update()
-        print("done")
+        print("done", score)
 
     def update_board(self):
         for i in range(self.env.row):
@@ -103,6 +107,7 @@ class GameGrid():
                     color = COLORS[curr]
                     self.game.itemconfig(rect, fill=color)
                 else:
+                    color = COLORS[EMPTY] # smthing effects random
                     for snake in self.env.snakes:
                         if curr != snake.id: continue
                         if (i, j) == snake.head:
@@ -114,7 +119,7 @@ class GameGrid():
                             random.seed(snake.id*17)
                             color = get_color()
                     self.game.itemconfig(rect, fill=color)
-
+                    
     def init_board(self):
         def draw(x1, y1, sz, color, func):
             return func(x1, y1, x1+sz, y1+sz, fill=color, width=0)
@@ -125,7 +130,7 @@ class GameGrid():
             row = []
             for j in range(self.env.col):
                 # create_oval for food ???
-                #fillers = [None] * 4
+                fillers = [None] * 4
                 color = COLORS[EMPTY]
                 rect = draw(j*self.rectangle_size+self.grid_padding, i*self.rectangle_size+self.grid_padding, 
                             self.rectangle_size-2*self.grid_padding, color, self.game.create_rectangle)
@@ -141,7 +146,7 @@ class GameGrid():
             num_neurons = layers[i]
             start = (self.size-num_neurons*radius-(num_neurons-1)*padding)/2
             offset_x.append(start)
-        layer_size = self.size / num_layers
+        layer_size = self.size/2 / num_layers
         x_coordinates = []
         for i in range(num_layers):
             x_coordinates.append((i+1)*layer_size-layer_size/2-radius)
@@ -187,7 +192,7 @@ class GameGrid():
                     n+=1
         for x, y in c:
             self.neurons.append(self.visual.create_oval(x,y,x+radius,y+radius,width=0,fill=BACKGROUND_COLOR))
-
+    
     def update_brain(self):
         if not self.chosen_one:
             for neuron in self.neurons:
@@ -224,18 +229,19 @@ class GameGrid():
             else:
                 self.visual.itemconfig(line, fill=BACKGROUND_COLOR)
         self.visual.configure(background=color)
-        #self.take_screenshot()
+        self.take_screenshot()
 
     def take_screenshot(self):
         # game windows should be on the left bottom corner
         if self.take_ss:
             x = 1
             y = 359
-            img = grab(bbox=(x,y,x+1438,y+718))
+            img = grab(bbox=(x,y,x+1077,y+718))
             img.save("ss/ss"+str(self.image_counter)+".png")
             self.image_counter += 1
         
     def on_click(self, event):
+        self.chosen_one = None
         x = int(event.x // self.rectangle_size)
         y = int(event.y // self.rectangle_size)
         if self.env.board[y,x] > 0:
@@ -243,7 +249,6 @@ class GameGrid():
                 if snake.id == self.env.board[y,x]:
                     self.chosen_one = snake
         else:
-            self.chosen_one = None
             self.controller = False
 
     def key_down(self, event):
@@ -254,9 +259,9 @@ class GameGrid():
         if key == "'q'":
             self.quit = True
         if key == "'z'":
-            self.speed += 0.005
+            self.speed = min(0.1, self.speed+0.025)
         if key == "'x'":
-            self.speed -= 0.005
+            self.speed = max(0, self.speed-0.025)
         if key == "'p'":
             self.pause = not self.pause
         if key == "'c'":

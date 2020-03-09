@@ -61,7 +61,6 @@ All of these go into the brain as an observation after that, the brain gives an 
      - Press "c" after you choose a snake
      - Continue the game and control the snake with W, A, S, D
 
- You need **[PyTorch](https://pytorch.org/get-started/locally/)** to run the game.
  Just run the *gui.py* file to watch them play.
  
 

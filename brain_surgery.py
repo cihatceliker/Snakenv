@@ -27,7 +27,7 @@ for param in old_local_brain.state_dict():
 
 k = 0
 for i in range(57):
-    if (i - 2) % 7 == 0: continue
+    if (i-2)%7 == 0: continue
     new_local_weights[:,i] = local_weights[:,k]
     new_target_weights[:,i] = target_weights[:,k]
     k += 1

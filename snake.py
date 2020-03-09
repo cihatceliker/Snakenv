@@ -108,7 +108,7 @@ class Snake():
             self.tail = self.body[-1]
         else:
             self.move(self.observe())
-        return self.give_state(), self.reward, self.done, self.info
+        return self.give_state(), self.reward, self.done, (self.id, self.info)
 
     def observe(self):
         cur_dir = self.check_wall_hit((dirs[self.direction][0] + self.head[0], \
