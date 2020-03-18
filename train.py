@@ -8,7 +8,7 @@ num_states = env.observation_space
 num_actions = env.action_space
 
 #agent = Agent(local_Q=Brain(num_states, num_actions), target_Q=Brain(num_states, num_actions), num_actions=num_actions)
-pickle_in = open("brain.snk","rb"); agent = pickle.load(pickle_in)
+pickle_in = open("weights/brain.snk","rb"); agent = pickle.load(pickle_in)
 
 
 start = 1 if len(agent.episodes) == 0 else agent.episodes[-1] + 1
@@ -35,9 +35,9 @@ for episode in range(start, num_iter):
     agent.scores.append(score)
     if episode % 10 == 0:
         avg_score = np.mean(agent.scores[max(0, episode-10):(episode+1)])
-        print('episode: ', episode,'score: %.6f' % score, ' average score %.3f' % avg_score)
+        print("episode: ", episode,"score: %.6f" % score, " average score %.3f" % avg_score)
         pickle_out = open(""+str(episode)+".snk","wb")
         pickle.dump(agent, pickle_out)
         pickle_out.close()
         print("weights are safe for ", episode)
-    else: print('episode: ', episode,'score: %.6f' % score)
+    else: print("episode: ", episode,"score: %.6f" % score)
