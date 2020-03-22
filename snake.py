@@ -111,8 +111,9 @@ class Snake():
         return self.give_state(), self.reward, self.done, (self.id, self.info)
 
     def observe(self):
-        cur_dir = self.check_wall_hit((dirs[self.direction][0] + self.head[0], \
-                                       dirs[self.direction][1] + self.head[1]))
+        cur_dir = Snake.check_wall_hit((dirs[self.direction][0] + self.head[0], \
+                                       dirs[self.direction][1] + self.head[1]),
+                                       self.env.row, self.env.col)
         self.hunger += 1
         num = self.env.board[cur_dir]
         
@@ -194,7 +195,7 @@ class Snake():
         x_ += i; y_ += j
         distance = 1
         while distance <= self.radius:
-            x_, y_ = self.check_wall_hit((x_, y_))
+            x_, y_ = Snake.check_wall_hit((x_, y_), self.env.row, self.env.col)
             current_num = self.env.board[x_, y_]
             if current_num != EMPTY:
                 for k in range(len(check_it)):
@@ -237,11 +238,12 @@ class Snake():
                     self.food_queue.pop(k)
                     break
 
-    def check_wall_hit(self, cur_dir):
-        if cur_dir[0] < 0: cur_dir = self.env.row - 1, cur_dir[1]
-        elif cur_dir[0] == self.env.row: cur_dir = 0, cur_dir[1]
-        if cur_dir[1] < 0: cur_dir = cur_dir[0], self.env.col - 1
-        elif cur_dir[1] == self.env.col: cur_dir = cur_dir[0], 0
+    @staticmethod
+    def check_wall_hit(cur_dir, row, col):
+        if cur_dir[0] < 0: cur_dir = row - 1, cur_dir[1]
+        elif cur_dir[0] == row: cur_dir = 0, cur_dir[1]
+        if cur_dir[1] < 0: cur_dir = cur_dir[0], col - 1
+        elif cur_dir[1] == col: cur_dir = cur_dir[0], 0
         return cur_dir
 
 

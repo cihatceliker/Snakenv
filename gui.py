@@ -1,4 +1,4 @@
-from snake import CONTROLLER_MAPPING, POSSIBLE_DIRECTIONS_TO_GO, EMPTY, FOOD, EGG, REMAINS, dirs
+from snake import CONTROLLER_MAPPING, POSSIBLE_DIRECTIONS_TO_GO, EMPTY, FOOD, EGG, REMAINS, dirs, Snake
 from tkinter import Frame, Canvas, Tk
 import time
 import threading
@@ -51,7 +51,7 @@ class GameGrid():
         self.env.reset()
         self.speed = speed
         self.size = size
-        self.grid_padding = 0
+        self.grid_padding = 10
         self.rectangle_size = size/self.env.row
         self.pause = False
         self.chosen_one = None
@@ -101,11 +101,21 @@ class GameGrid():
     def update_board(self):
         for i in range(self.env.row):
             for j in range(self.env.col):
-                rect = self.game_area[i][j]
+                rect, _, fillers = self.game_area[i][j]
                 curr = int(self.env.board[i, j])
                 if curr in COLORS:
                     color = COLORS[curr]
                     self.game.itemconfig(rect, fill=color)
+
+                    colors = [COLORS[EMPTY]] * 4
+
+                    for m in range(4):
+                        x_, y_ = dirs[m]
+                        cur_dir = Snake.check_wall_hit((i+x_, j+y_), self.env.row, self.env.col)
+                        if self.env.board[cur_dir] == curr:
+                            colors[m] = color
+                    for c in range(4):
+                        self.game.itemconfig(fillers[c], fill=colors[c])
                 else:
                     color = COLORS[EMPTY] # smthing effects random
                     for snake in self.env.snakes:
@@ -118,23 +128,58 @@ class GameGrid():
                             # comment seed to see the rainbow mode
                             random.seed(snake.id*17)
                             color = get_color()
-                    self.game.itemconfig(rect, fill=color)
-                    
+                        # fillers for snake body parts
+                        for k in range(len(snake.body)):
+                            if snake.body[k] == (i, j):
+                                colors = [COLORS[EMPTY]] * 4
+                                next_body_part = None
+                                prev_body_part = None
+                                if k + 1 != len(snake.body):
+                                    next_body_part = snake.body[k+1]
+                                if k != 0:
+                                    prev_body_part = snake.body[k-1]
+                                for m in range(4):
+                                    x_, y_ = dirs[m]
+                                    cur_dir = Snake.check_wall_hit((i+x_, j+y_), self.env.row, self.env.col)
+                                    if self.env.board[cur_dir] == curr and \
+                                        (prev_body_part == cur_dir or next_body_part == cur_dir):
+                                        colors[m] = color
+                                for c in range(4):
+                                    self.game.itemconfig(fillers[c], fill=colors[c])
+                                break
+                        self.game.itemconfig(rect, fill=color)
+
+
     def init_board(self):
-        def draw(x1, y1, sz, color, func):
-            return func(x1, y1, x1+sz, y1+sz, fill=color, width=0)
-        # first draw the game area bg
-        rect = draw(0, 0, self.size, COLORS[EMPTY], self.game.create_rectangle)
+        color = COLORS[EMPTY]
+        def draw(x1, y1, w, h, func, color=color):
+            return func(x1, y1, x1+w, y1+h, fill=color, width=0)
+        
+        rect = draw(0, 0, self.size, self.size, self.game.create_rectangle)
+        
         self.game_area = []
+        # rectangle, oval, fillers_tuple
+        
         for i in range(self.env.row):
             row = []
             for j in range(self.env.col):
                 # create_oval for food ???
-                fillers = [None] * 4
-                color = COLORS[EMPTY]
-                rect = draw(j*self.rectangle_size+self.grid_padding, i*self.rectangle_size+self.grid_padding, 
-                            self.rectangle_size-2*self.grid_padding, color, self.game.create_rectangle)
-                row.append(rect)
+                fillers = {}
+
+                x = j * self.rectangle_size + self.grid_padding
+                y = i * self.rectangle_size + self.grid_padding
+                sz = self.rectangle_size - 2 * self.grid_padding
+
+                fillers[0] = draw(x, y - self.grid_padding, sz, self.grid_padding, self.game.create_rectangle)
+                fillers[1] = draw(x + sz, y, self.grid_padding, sz, self.game.create_rectangle)
+                fillers[2] = draw(x, y + sz, sz, self.grid_padding, self.game.create_rectangle)
+                fillers[3] = draw(x - self.grid_padding, y, self.grid_padding, sz, self.game.create_rectangle)
+
+                #oval = draw(x, y, sz, sz, self.game.create_oval)
+                rect = draw(x, y, sz, sz, self.game.create_rectangle)
+                #oval = draw(x-self.grid_padding, y-self.grid_padding, self.rectangle_size, self.rectangle_size, self.game.create_oval)
+                row.append((rect, None, fillers))
+
             self.game_area.append(row)
 
     def init_brain(self, radius=10, padding=1):

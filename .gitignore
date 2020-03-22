@@ -6,7 +6,6 @@ ss/
 res/
 exp.py
 weight_conversion.py
-model_translation.py
 *0.snk
 *.txt
 *.py[cod]
